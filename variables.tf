@@ -1,8 +1,27 @@
-variable "tenancy_ocid" {}
-variable "user_ocid" {}
-variable "fingerprint" {}
-variable "region" {}
-variable "compartment_ocid" {}
+variable "tenancy_ocid" {
+  description = "The OCID of the tenancy"
+  type        = string
+}
+
+variable "user_ocid" {
+  description = "The OCID of the user calling the API"
+  type        = string
+}
+
+variable "fingerprint" {
+  description = "Fingerprint of the API key uploaded in OCI"
+  type        = string
+}
+
+variable "region" {
+  description = "OCI region where resources will be created (e.g., ap-hyderabad-1)"
+  type        = string
+}
+
+variable "compartment_ocid" {
+  description = "Compartment OCID where resources will be created"
+  type        = string
+}
 
 variable "ssh_public_key" {
   description = "SSH public key to access the VM"
@@ -10,7 +29,7 @@ variable "ssh_public_key" {
 }
 
 variable "private_key" {
-  description = "Optional private key (if you are storing it in TF cloud)"
+  description = "Private key (PEM content) for OCI API authentication"
   type        = string
-  default     = ""
+  sensitive   = true
 }
