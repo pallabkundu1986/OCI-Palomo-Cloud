@@ -50,12 +50,18 @@ resource "oci_core_security_list" "public_sl" {
   }
 }
 
-# Attach Security List to Subnet
-resource "oci_core_subnet_security_list_association" "public_assoc" {
-  subnet_id          = oci_core_subnet.public_subnet.id
-  security_list_id   = oci_core_security_list.public_sl.id
-}
+resource "oci_core_subnet" "public_subnet" {
+  vcn_id                     = oci_core_vcn.fin_vcn.id
+  cidr_block                 = "10.0.1.0/24"
+  display_name               = "public-subnet"
+  compartment_id             = var.compartment_ocid
+  prohibit_public_ip_on_vnic = false
 
+  # Attach security list
+  security_list_ids = [
+    oci_core_security_list.public_sl.id
+  ]
+}
 # Create Linux VM
 resource "oci_core_instance" "linux_vm" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
