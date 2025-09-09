@@ -20,16 +20,7 @@ resource "oci_core_vcn" "fin_vcn" {
   compartment_id = var.compartment_ocid
 }
 
-# Create Public Subnet
-resource "oci_core_subnet" "public_subnet" {
-  vcn_id                     = oci_core_vcn.fin_vcn.id
-  cidr_block                 = "10.0.1.0/24"
-  display_name               = "public-subnet"
-  compartment_id             = var.compartment_ocid
-  prohibit_public_ip_on_vnic = false
-}
-
-# Create Security List (Allow SSH)
+# Create Security List (Allow SSH and all outbound)
 resource "oci_core_security_list" "public_sl" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.fin_vcn.id
@@ -50,6 +41,7 @@ resource "oci_core_security_list" "public_sl" {
   }
 }
 
+# Create Public Subnet and attach Security List
 resource "oci_core_subnet" "public_subnet" {
   vcn_id                     = oci_core_vcn.fin_vcn.id
   cidr_block                 = "10.0.1.0/24"
@@ -62,6 +54,7 @@ resource "oci_core_subnet" "public_subnet" {
     oci_core_security_list.public_sl.id
   ]
 }
+
 # Create Linux VM
 resource "oci_core_instance" "linux_vm" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
