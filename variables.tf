@@ -1,4 +1,10 @@
-variable "compartment_ocid" {
-  description = "Root compartment (palomocloud)"
-  default     = "ocid1.tenancy.oc1..aaaaaaaaumbbmktecpk33x3t6nw7uqfrlkshni4vb4qkwrdxdjfo5467v5ga"
+variable "tenancy_ocid" {}
+variable "user_ocid" {}
+variable "fingerprint" {}
+variable "private_key" {
+  sensitive = true
 }
+variable "region" {}
+variable "compartment_ocid" {}
+variable "ssh_public_key" {}
+
