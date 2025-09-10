@@ -50,11 +50,30 @@ resource "oci_core_subnet" "public_subnet" {
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = false
   dns_label                  = "publicsubnet" 
+  route_table_id = oci_core_route_table.public_rt.id
 
   # Attach security list
   security_list_ids = [
     oci_core_security_list.public_sl.id
   ]
+}
+
+resource "oci_core_internet_gateway" "igw" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.fin_vcn.id
+  display_name   = "fin-igw"
+}
+
+resource "oci_core_route_table" "public_rt" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.fin_vcn.id
+  display_name   = "public-rt"
+
+  route_rules {
+    destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+    network_entity_id = oci_core_internet_gateway.igw.id
+  }
 }
 
 # Create Linux VM
