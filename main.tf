@@ -18,6 +18,7 @@ resource "oci_core_vcn" "fin_vcn" {
   cidr_block     = "10.0.0.0/16"
   display_name   = "fin-vcn"
   compartment_id = var.compartment_ocid
+  dns_label      = "finvcn"
 }
 
 # Create Security List (Allow SSH and all outbound)
@@ -48,6 +49,7 @@ resource "oci_core_subnet" "public_subnet" {
   display_name               = "public-subnet"
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = false
+  dns_label                  = "publicsubnet" 
 
   # Attach security list
   security_list_ids = [
