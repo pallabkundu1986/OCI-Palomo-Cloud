@@ -98,3 +98,4 @@ resource "oci_core_instance" "linux_vm" {
     ssh_authorized_keys = var.ssh_public_key
   }
 }
+

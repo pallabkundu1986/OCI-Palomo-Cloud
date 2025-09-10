@@ -33,3 +33,4 @@ variable "ssh_public_key" {
   description = "SSH public key to access the VM"
   type        = string
 }
+
