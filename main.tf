@@ -75,6 +75,11 @@ resource "oci_core_security_list" "public_sl" {
   }
 }
 
+  ingress_security_rules {
+    protocol = "1"   # ICMP
+    source   = "10.0.0.0/16"
+  }
+
   egress_security_rules {
     protocol    = "all"
     destination = "0.0.0.0/0"
@@ -95,6 +100,12 @@ resource "oci_core_security_list" "private_sl" {
       max = 65535
     }
   }
+
+  ingress_security_rules {
+    protocol = "1"   # ICMP
+    source   = "10.0.0.0/16"
+  }
+
   
   egress_security_rules {
     protocol    = "all"
