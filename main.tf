@@ -168,8 +168,10 @@ resource "oci_core_instance" "linux_vm1" {
   source_details {
     source_type = "image"
     source_id   = data.oci_core_images.arm_image.images[0].id
-	
-  }
+	  }
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+  }  
 }
 
  # Create Linux VM 2 (Private Access) 
