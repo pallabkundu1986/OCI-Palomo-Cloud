@@ -125,5 +125,8 @@ resource "oci_core_instance" "linux_vm" {
   }
 }
 
-
+  lifecycle {
+    create_before_destroy = true
+  }
+}
 
