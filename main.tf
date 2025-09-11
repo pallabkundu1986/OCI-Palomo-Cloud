@@ -21,7 +21,7 @@ resource "oci_core_vcn" "fin_vcn" {
   dns_label      = "finvcn"
 }
 
-# Create Security List (Allow SSH and all outbound)
+# Create Security List (Allow SSH, HTTP, HTTPS and all outbound)
 resource "oci_core_security_list" "public_sl" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.fin_vcn.id
@@ -35,6 +35,32 @@ resource "oci_core_security_list" "public_sl" {
       max = 22
     }
   }
+  
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 80
+      max = 80
+    }
+  }
+
+ ingress_security_rules {
+  protocol = "6" # TCP
+  source   = "0.0.0.0/0"
+  tcp_options {
+    min = 8080
+    max = 8080
+  }
+}
 
   egress_security_rules {
     protocol    = "all"
@@ -78,15 +104,16 @@ resource "oci_core_route_table" "public_rt" {
 
 # Create Linux VM
 resource "oci_core_instance" "linux_vm" {
+  count                = 2
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E2.1.Micro"
-  display_name        = "Fin-vm"
+  display_name        = Fin-vm-${count.index + 1}
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "finvm"
+    hostname_label   = "finvm${count.index + 1}"
   }
 
   source_details {
@@ -98,4 +125,5 @@ resource "oci_core_instance" "linux_vm" {
     ssh_authorized_keys = var.ssh_public_key
   }
 }
+
 
