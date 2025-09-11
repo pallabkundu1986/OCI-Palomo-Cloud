@@ -151,7 +151,7 @@ resource "oci_core_instance" "linux_vm1" {
   }
   source_details {
   source_type = "image"
-  source_id   = data.oci_core_images.oracle_linux.id
+  source_id   = data.oci_core_images.oracle_linux.images[0].id
   }
     metadata = {
     ssh_authorized_keys = var.ssh_public_key
@@ -187,7 +187,7 @@ resource "oci_core_instance" "linux_vm1" {
 
   source_details {
     source_type = "image"
-    source_id   = data.oci_core_images.oracle_linux.id
+    source_id   = data.oci_core_images.oracle_linux.images[0].id
   }
 
   metadata = {
