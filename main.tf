@@ -3,7 +3,7 @@ data "oci_core_images" "arm_image" {
   compartment_id       = var.tenancy_ocid
   operating_system     = "Oracle Linux"
   operating_system_version = "9"
-  shape                = "VM.Standard.A1.Flex"
+  shape                = "VM.Standard.E3.Flex"
   sort_by              = "TIMECREATED"
   sort_order           = "DESC"
 
@@ -153,15 +153,15 @@ resource "oci_core_route_table" "public_rt" {
 
 # Create Linux VM 1 (Public Access)
 resource "oci_core_instance" "linux_vm1" {
-  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[1].name
   compartment_id      = var.compartment_ocid
-  shape               = "VM.Standard.A1.Flex"
+  shape               = "VM.Standard.E3.Flex"
   display_name        = "Public-Server01"
 
   # For A1.Flex shape
   shape_config {
     ocpus         = 1
-    memory_in_gbs = 6
+    memory_in_gbs = 2
   }
 
   create_vnic_details {
