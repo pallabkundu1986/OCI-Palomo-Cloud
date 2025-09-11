@@ -108,7 +108,7 @@ resource "oci_core_instance" "linux_vm" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E2.1.Micro"
-  display_name        = Fin-vm-${count.index + 1}
+  display_name        = "Fin-vm-${count.index + 1}"
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
