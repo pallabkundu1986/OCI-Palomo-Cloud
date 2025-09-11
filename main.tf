@@ -186,7 +186,7 @@ resource "oci_core_instance" "linux_vm1" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "Public-vnic"
+    hostname_label   = "public-vnic1"
   }
     # Reference the ARM image data source
   source_details {
@@ -197,8 +197,36 @@ resource "oci_core_instance" "linux_vm1" {
     ssh_authorized_keys = var.ssh_public_key
   }  
 }
+Create Linux VM 2 (Public Access)
+resource "oci_core_instance" "linux_vm1_clone" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard.E3.Flex"
+  display_name        = "Public-Server02"
 
- # Create Linux VM 2 (Private Access) 
+  shape_config {
+    ocpus         = 1
+    memory_in_gbs = 6
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public_subnet.id
+    assign_public_ip = true
+    hostname_label   = "public-vnic2"
+  }
+
+  source_details {
+    source_type = "image"
+    source_id   = "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaazf34fypegtnzvocmvjfs6hjwzezehinollgci24np3cqfp225ifq"
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+  }
+}
+
+
+ # Create Linux VM 3 (Private Access) 
   resource "oci_core_instance" "linux_vm2" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
