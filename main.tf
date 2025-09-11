@@ -158,6 +158,10 @@ resource "oci_core_instance" "linux_vm1" {
   shape               = "VM.Standard.E3.Flex"
   display_name        = "Public-Server01"
 
+  shape_config {
+    ocpus         = 1   # Minimum 1 OCPU for A1.Flex
+    memory_in_gbs = 6   # Minimum 6 GB RAM for A1.Flex
+  }
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
