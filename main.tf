@@ -3,6 +3,7 @@ data "oci_core_images" "arm_image" {
   compartment_id       = var.tenancy_ocid
   operating_system     = "Oracle Linux"
   operating_system_version = "9"
+  shape                = "VM.Standard.A1.Flex"
   sort_by              = "TIMECREATED"
   sort_order           = "DESC"
 
@@ -12,7 +13,8 @@ data "oci_core_images" "arm_image" {
 data "oci_core_images" "amd_image" {
   compartment_id       = var.tenancy_ocid
   operating_system     = "Oracle Linux"
-  operating_system_version = "9"
+  operating_system_version = "7.9"
+  shape                = "VM.Standard.E2.1.Micro"
   sort_by              = "TIMECREATED"
   sort_order           = "DESC"
 
@@ -171,6 +173,7 @@ resource "oci_core_instance" "linux_vm1" {
   source_details {
     source_type = "image"
     source_id   = data.oci_core_images.arm_image.images[0].id
+	
   }
     metadata = {
     ssh_authorized_keys = var.ssh_public_key
