@@ -5,7 +5,6 @@ data "oci_core_images" "oracle_linux" {
   operating_system_version = "9"
   sort_by                  = "TIMECREATED"
   sort_order               = "DESC"
-  most_recent              = true
 }
 
 # Lookup Availability Domains
