@@ -153,7 +153,7 @@ resource "oci_core_route_table" "public_rt" {
 
 # Create Linux VM 1 (Public Access)
 resource "oci_core_instance" "linux_vm1" {
-  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[1].name
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E3.Flex"
   display_name        = "Public-Server01"
