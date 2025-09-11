@@ -126,3 +126,4 @@ resource "oci_core_instance" "linux_vm" {
 }
 
 
+
