@@ -29,7 +29,7 @@ resource "oci_core_security_list" "public_sl" {
 
   ingress_security_rules {
     protocol = "6"  # TCP
-    source   = "0.0.0.0/0"
+    source   = "152.58.183.242/32"
     tcp_options {
       min = 22
       max = 22
@@ -38,7 +38,7 @@ resource "oci_core_security_list" "public_sl" {
   
   ingress_security_rules {
     protocol = "6"  # TCP
-    source   = "0.0.0.0/0"
+    source   = "152.58.183.242/32"
     tcp_options {
       min = 443
       max = 443
@@ -46,7 +46,7 @@ resource "oci_core_security_list" "public_sl" {
   }
   ingress_security_rules {
     protocol = "6"  # TCP
-    source   = "0.0.0.0/0"
+    source   = "152.58.183.242/32"
     tcp_options {
       min = 80
       max = 80
@@ -55,7 +55,7 @@ resource "oci_core_security_list" "public_sl" {
 
  ingress_security_rules {
   protocol = "6" # TCP
-  source   = "0.0.0.0/0"
+  source   = "152.58.183.242/32"
   tcp_options {
     min = 8080
     max = 8080
@@ -104,16 +104,15 @@ resource "oci_core_route_table" "public_rt" {
 
 # Create Linux VM
 resource "oci_core_instance" "linux_vm" {
-  count                = 2
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E2.1.Micro"
-  display_name        = "Fin-vm-${count.index + 1}"
+  display_name        = "Public-Server01"
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "finvm${count.index + 1}"
+    hostname_label   = "Public-vnic"
   }
 
   source_details {
