@@ -2,9 +2,10 @@
 data "oci_core_images" "oracle_linux" {
   compartment_id           = var.tenancy_ocid
   operating_system         = "Oracle Linux"
-  operating_system_version = "7"
+  operating_system_version = "9"
   sort_by                  = "TIMECREATED"
   sort_order               = "DESC"
+  most_recent              = true
 }
 
 # Lookup Availability Domains
@@ -151,7 +152,7 @@ resource "oci_core_instance" "linux_vm1" {
   }
   source_details {
   source_type = "image"
-  source_id   = data.oci_core_images.oracle_linux.images[0].id
+  source_id   = data.oci_core_images.oracle_linux.id
   }
     metadata = {
     ssh_authorized_keys = var.ssh_public_key
@@ -173,7 +174,7 @@ resource "oci_core_instance" "linux_vm1" {
 
   source_details {
     source_type = "image"
-    source_id   = data.oci_core_images.oracle_linux.images[0].id
+    source_id   = data.oci_core_images.oracle_linux.id
   }
 
   metadata = {
