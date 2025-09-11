@@ -5,7 +5,7 @@ data "oci_core_images" "arm_image" {
   operating_system_version = "9"
   sort_by              = "TIMECREATED"
   sort_order           = "DESC"
-  shape_filter         = "VM.Standard.A1.Flex"
+
 }
 
 # Lookup Oracle Linux Image for AMD shape
@@ -15,7 +15,7 @@ data "oci_core_images" "amd_image" {
   operating_system_version = "9"
   sort_by              = "TIMECREATED"
   sort_order           = "DESC"
-  shape_filter         = "VM.Standard.E2.1.Micro"
+
 }
 
 
