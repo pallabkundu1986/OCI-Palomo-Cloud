@@ -1,11 +1,23 @@
-# Lookup Oracle Linux Image (in root compartment)
-data "oci_core_images" "oracle_linux" {
-  compartment_id           = var.tenancy_ocid
-  operating_system         = "Oracle Linux"
+# Lookup Oracle Linux Image for ARM shape
+data "oci_core_images" "arm_image" {
+  compartment_id       = var.tenancy_ocid
+  operating_system     = "Oracle Linux"
   operating_system_version = "9"
-  sort_by                  = "TIMECREATED"
-  sort_order               = "DESC"
+  sort_by              = "TIMECREATED"
+  sort_order           = "DESC"
+  shape_filter         = "VM.Standard.A1.Flex"
 }
+
+# Lookup Oracle Linux Image for AMD shape
+data "oci_core_images" "amd_image" {
+  compartment_id       = var.tenancy_ocid
+  operating_system     = "Oracle Linux"
+  operating_system_version = "9"
+  sort_by              = "TIMECREATED"
+  sort_order           = "DESC"
+  shape_filter         = "VM.Standard.E2.1.Micro"
+}
+
 
 # Lookup Availability Domains
 data "oci_identity_availability_domains" "ADs" {
@@ -122,7 +134,7 @@ resource "oci_core_subnet" "private_subnet" {
 resource "oci_core_internet_gateway" "igw" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.palomo_vcn.id
-  display_name   = "fin-igw"
+  display_name   = "Internet-Gateway"
 }
 
 resource "oci_core_route_table" "public_rt" {
@@ -141,17 +153,24 @@ resource "oci_core_route_table" "public_rt" {
 resource "oci_core_instance" "linux_vm1" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
-  shape               = "VM.Standard.E2.1.Micro"
+  shape               = "VM.Standard.A1.Flex"
   display_name        = "Public-Server01"
+
+  # For A1.Flex shape
+  shape_config {
+    ocpus         = 1
+    memory_in_gbs = 6
+  }
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
     hostname_label   = "Public-vnic"
   }
+    # Reference the ARM image data source
   source_details {
-  source_type = "image"
-  source_id   = data.oci_core_images.oracle_linux.images[0].id
+    source_type = "image"
+    source_id   = data.oci_core_images.arm_image.images[0].id
   }
     metadata = {
     ssh_authorized_keys = var.ssh_public_key
@@ -169,5 +188,28 @@ resource "oci_core_instance" "linux_vm1" {
       /opt/tomcat/bin/startup.sh
     EOT
     )
+  }
+}
+ # Create Linux VM 2 (Private Access) 
+  resource "oci_core_instance" "linux_vm2" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard.E2.1.Micro"
+  display_name        = "Private-VM01"
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.private_subnet.id
+    assign_public_ip = false
+    hostname_label   = "Private-vnic"
+  }
+
+  # Reference the AMD image data source
+  source_details {
+    source_type = "image"
+    source_id   = data.oci_core_images.amd_image.images[0].id
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
   }
 }
