@@ -75,6 +75,15 @@ resource "oci_core_security_list" "public_sl" {
   }
 }
 
+ ingress_security_rules {
+  protocol = "6" # TCP
+  source   = "10.0.0.0/16"
+  tcp_options {
+    min = 8080
+    max = 8080
+  }
+}
+
   ingress_security_rules {
     protocol = "1"   # ICMP
     source   = "10.0.0.0/16"
