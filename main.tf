@@ -197,7 +197,7 @@ resource "oci_core_instance" "linux_vm1" {
     ssh_authorized_keys = var.ssh_public_key
   }  
 }
-Create Linux VM 2 (Public Access)
+# Create Linux VM 2 (Public Access)
 resource "oci_core_instance" "linux_vm1_clone" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
