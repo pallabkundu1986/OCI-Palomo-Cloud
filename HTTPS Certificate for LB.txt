@@ -1,0 +1,58 @@
+The Load Balancer listens on port 443 (HTTPS) with your certificate.
+
+It forwards decrypted traffic to your backend servers (VM1 & VM2) on HTTP port 80 (or 8080 if you prefer).
+
+Your servers don’t need SSL setup — only the LB handles it.
+
+🔑 Terraform Example (HTTPS + HTTP)
+# SSL Certificate (Self-signed or uploaded)
+resource "oci_load_balancer_certificate" "public_ssl_cert" {
+  load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
+  name             = "public-cert"
+
+  # Upload your PEM files
+  public_certificate   = file("certs/server.crt")
+  private_key          = file("certs/server.key")
+  ca_certificate       = file("certs/ca.crt")   # optional
+}
+
+# HTTPS Listener
+resource "oci_load_balancer_listener" "https_listener" {
+  load_balancer_id         = oci_load_balancer_load_balancer.public_lb.id
+  name                     = "https-listener"
+  default_backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  protocol                 = "HTTP"   # backend protocol
+  port                     = 443
+
+  ssl_configuration {
+    certificate_name        = oci_load_balancer_certificate.public_ssl_cert.name
+    verify_peer_certificate = false
+  }
+}
+
+# (Optional) Keep HTTP listener for redirect
+resource "oci_load_balancer_listener" "http_listener" {
+  load_balancer_id         = oci_load_balancer_load_balancer.public_lb.id
+  name                     = "http-listener"
+  default_backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  protocol                 = "HTTP"
+  port                     = 80
+}
+
+📂 Files You’ll Need
+
+certs/server.crt → Your public SSL certificate (self-signed or CA-issued).
+
+certs/server.key → Private key.
+
+certs/ca.crt → Root CA (only if required).
+
+🌐 Traffic Flow
+
+Client connects to https://LB_Public_IP/
+
+OCI LB terminates SSL on port 443
+
+LB forwards traffic to backend VMs (on port 80)
+
+VMs respond → LB encrypts again if needed → client sees HTTPS

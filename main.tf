@@ -192,6 +192,56 @@ resource "oci_core_route_table" "private_rt" {
   }
 }
 
+# Load Balancer
+resource "oci_load_balancer_load_balancer" "public_lb" {
+  compartment_id = var.compartment_ocid
+  display_name   = "Public-LB"
+  shape          = "flexible"
+  subnet_ids     = [oci_core_subnet.public_subnet.id]
+
+  shape_details {
+    minimum_bandwidth_in_mbps = 10
+    maximum_bandwidth_in_mbps = 100
+  }
+}
+
+# Backend Set
+resource "oci_load_balancer_backend_set" "public_backendset" {
+  load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
+  name             = "public-backendset"
+  policy           = "ROUND_ROBIN"
+
+  health_checker {
+    protocol = "HTTP"
+    port     = 80
+    url_path = "/"
+    return_code = 200
+  }
+}
+
+# Backend Servers (VM01 and VM02 private IPs)
+resource "oci_load_balancer_backend" "server01_backend" {
+  load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
+  backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  ip_address       = oci_core_instance.linux_vm1.primary_private_ip
+  port             = 80
+}
+
+resource "oci_load_balancer_backend" "server02_backend" {
+  load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
+  backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  ip_address       = oci_core_instance.linux_vm1_clone.primary_private_ip
+  port             = 80
+}
+
+# Listener (HTTP)
+resource "oci_load_balancer_listener" "http_listener" {
+  load_balancer_id         = oci_load_balancer_load_balancer.public_lb.id
+  name                     = "http-listener"
+  default_backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  protocol                 = "HTTP"
+  port                     = 80
+}
 
 # Create Linux VM 1 (Public Access)
 resource "oci_core_instance" "linux_vm1" {
@@ -207,7 +257,7 @@ resource "oci_core_instance" "linux_vm1" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
-    assign_public_ip = true
+    assign_public_ip = false
     hostname_label   = "VM-Server01"
   }
     # Reference the ARM image data source
@@ -219,6 +269,7 @@ resource "oci_core_instance" "linux_vm1" {
     ssh_authorized_keys = var.ssh_public_key
   }  
 }
+
 # Create Linux VM 2 (Public Access)
 resource "oci_core_instance" "linux_vm1_clone" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
@@ -233,7 +284,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
-    assign_public_ip = true
+    assign_public_ip = false
     hostname_label   = "VM-Server02"
   }
 
@@ -246,7 +297,6 @@ resource "oci_core_instance" "linux_vm1_clone" {
     ssh_authorized_keys = var.ssh_public_key
   }
 }
-
 
  # Create Linux VM 3 (Private Access) 
   resource "oci_core_instance" "linux_vm2" {
