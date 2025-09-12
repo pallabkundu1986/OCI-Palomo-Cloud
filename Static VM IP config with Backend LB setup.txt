@@ -1,0 +1,76 @@
+# Create Linux VM 1 (Public Access) with static private IP
+resource "oci_core_instance" "linux_vm1" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard.E3.Flex"
+  display_name        = "Public-Server01"
+  fault_domain        = "FAULT-DOMAIN-1"
+
+  shape_config {
+    ocpus         = 1
+    memory_in_gbs = 6
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public_subnet1.id
+    assign_public_ip = false
+    hostname_label   = "vm-server01"
+    private_ip       = "10.0.1.10"   # <-- Static private IP
+  }
+
+  source_details {
+    source_type = "image"
+    source_id   = data.oci_core_images.arm_image.images[0].id
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+  }
+}
+
+# Create Linux VM 2 (Public Access) with static private IP
+resource "oci_core_instance" "linux_vm1_clone" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard.E3.Flex"
+  display_name        = "Public-Server02"
+  fault_domain        = "FAULT-DOMAIN-2"
+
+  shape_config {
+    ocpus         = 1
+    memory_in_gbs = 6
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public_subnet2.id
+    assign_public_ip = false
+    hostname_label   = "vm-server02"
+    private_ip       = "10.0.2.10"   # <-- Static private IP
+  }
+
+  source_details {
+    source_type = "image"
+    source_id   = "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaazf34fypegtnzvocmvjfs6hjwzezehinollgci24np3cqfp225ifq"
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+  }
+}
+
+
+# Backend Servers (VM01 and VM02 with static private IPs)
+resource "oci_load_balancer_backend" "server01_backend" {
+  load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
+  backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  ip_address       = "10.0.1.10"   # Static private IP of VM1
+  port             = 80
+}
+
+resource "oci_load_balancer_backend" "server02_backend" {
+  load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
+  backend_set_name = oci_load_balancer_backend_set.public_backendset.name
+  ip_address       = "10.0.2.10"   # Static private IP of VM2
+  port             = 80
+}
+
