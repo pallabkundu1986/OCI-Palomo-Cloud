@@ -103,7 +103,15 @@ resource "oci_core_security_list" "private_sl" {
 
   ingress_security_rules {
     protocol = "6"  # TCP
-    source   = "10.0.1.0/24"
+    source   = "10.0.10.0/24"
+    tcp_options {
+      min = 1
+      max = 65535
+    }
+  }
+    ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "10.0.20.0/24"
     tcp_options {
       min = 1
       max = 65535
@@ -125,7 +133,7 @@ resource "oci_core_security_list" "private_sl" {
 # Server01 public subnet (same AD, different CIDR)
 resource "oci_core_subnet" "public_subnet1" {
   vcn_id                     = oci_core_vcn.palomo_vcn.id
-  cidr_block                 = "10.0.1.0/24"
+  cidr_block                 = "10.0.10.0/24"
   display_name               = "public-subnet-1"
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = false
@@ -137,7 +145,7 @@ resource "oci_core_subnet" "public_subnet1" {
 # Server02 public subnet (same AD, different CIDR)
 resource "oci_core_subnet" "public_subnet2" {
   vcn_id                     = oci_core_vcn.palomo_vcn.id
-  cidr_block                 = "10.0.2.0/24"
+  cidr_block                 = "10.0.20.0/24"
   display_name               = "public-subnet-2"
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = false
@@ -149,7 +157,7 @@ resource "oci_core_subnet" "public_subnet2" {
 # Create Private Subnet and attach Security List
 resource "oci_core_subnet" "private_subnet" {
   vcn_id                     = oci_core_vcn.palomo_vcn.id
-  cidr_block                 = "10.0.3.0/24"
+  cidr_block                 = "10.0.30.0/24"
   display_name               = "private_subnet"
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = true
