@@ -224,7 +224,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E3.Flex"
-  display_name        = "VM-Server02"
+  display_name        = "Public-Server02"
 
   shape_config {
     ocpus         = 1
@@ -234,7 +234,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "public-vnic2"
+    hostname_label   = "VM-Server02"
   }
 
   source_details {
@@ -258,7 +258,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.private_subnet.id
     assign_public_ip = false
-    hostname_label   = "Private-vnic"
+    hostname_label   = "Lab-VM01"
   }
 
   # Reference the AMD image data source
