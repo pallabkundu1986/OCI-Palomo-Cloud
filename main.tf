@@ -151,6 +151,8 @@ resource "oci_core_subnet" "private_subnet" {
   security_list_ids = [
     oci_core_security_list.private_sl.id
   ]
+  # Attach NAT route table
+  route_table_id = oci_core_route_table.private_rt.id
 }
 
 resource "oci_core_internet_gateway" "igw" {
@@ -158,6 +160,13 @@ resource "oci_core_internet_gateway" "igw" {
   vcn_id         = oci_core_vcn.palomo_vcn.id
   display_name   = "Internet-Gateway"
 }
+
+resource "oci_core_nat_gateway" "nat_gw" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.palomo_vcn.id
+  display_name   = "NAT-Gateway"
+}
+
 
 resource "oci_core_route_table" "public_rt" {
   compartment_id = var.compartment_ocid
@@ -170,6 +179,19 @@ resource "oci_core_route_table" "public_rt" {
     network_entity_id = oci_core_internet_gateway.igw.id
   }
 }
+
+resource "oci_core_route_table" "private_rt" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.palomo_vcn.id
+  display_name   = "private-rt"
+
+  route_rules {
+    destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+    network_entity_id = oci_core_nat_gateway.nat_gw.id
+  }
+}
+
 
 # Create Linux VM 1 (Public Access)
 resource "oci_core_instance" "linux_vm1" {
