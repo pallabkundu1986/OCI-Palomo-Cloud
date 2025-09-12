@@ -208,7 +208,7 @@ resource "oci_core_instance" "linux_vm1" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "public-vnic1"
+    hostname_label   = "VM-Server01"
   }
     # Reference the ARM image data source
   source_details {
@@ -224,7 +224,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E3.Flex"
-  display_name        = "Public-Server02"
+  display_name        = "VM-Server02"
 
   shape_config {
     ocpus         = 1
