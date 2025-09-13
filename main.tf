@@ -123,23 +123,15 @@ resource "oci_core_security_list" "private_sl" {
     source   = "10.0.0.0/16"
   }
 
-  ingress_security_rules {
-    protocol = "6"  # TCP
-    source   = "152.58.183.242/32"
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
-  
+ 
   egress_security_rules {
     protocol    = "all"
     destination = "0.0.0.0/0"
   }
 }
 
-# Server01 public subnet (same AD, different CIDR)
-resource "oci_core_subnet" "public_subnet1" {
+# Create Public subnet
+resource "oci_core_subnet" "public_subnet" {
   vcn_id                     = oci_core_vcn.palomo_vcn.id
   cidr_block                 = "10.0.10.0/24"
   display_name               = "public-subnet-1"
@@ -148,19 +140,6 @@ resource "oci_core_subnet" "public_subnet1" {
   dns_label                  = "publicsubnet1" 
   route_table_id = oci_core_route_table.public_rt.id
   security_list_ids = [oci_core_security_list.public_sl.id]
-  availability_domain = null
-}
-
-# Server02 public subnet (same AD, different CIDR)
-resource "oci_core_subnet" "public_subnet2" {
-  vcn_id                     = oci_core_vcn.palomo_vcn.id
-  cidr_block                 = "10.0.20.0/24"
-  display_name               = "public-subnet-2"
-  compartment_id             = var.compartment_ocid
-  prohibit_public_ip_on_vnic = false
-  dns_label                  = "publicsubnet2"
-  route_table_id             = oci_core_route_table.public_rt.id
-  security_list_ids          = [oci_core_security_list.public_sl.id]
   availability_domain = null
 }
 
@@ -223,10 +202,8 @@ resource "oci_load_balancer_load_balancer" "public_lb" {
   compartment_id = var.compartment_ocid
   display_name   = "Public-LB"
   shape          = "flexible"
-  subnet_ids     = [
-    oci_core_subnet.public_subnet1.id,
-    oci_core_subnet.public_subnet2.id
-  ]
+  subnet_ids     = [oci_core_subnet.public_subnet.id]
+  
   shape_details {
     minimum_bandwidth_in_mbps = 10
     maximum_bandwidth_in_mbps = 100
@@ -286,7 +263,7 @@ resource "oci_core_instance" "linux_vm1" {
   }
 
   create_vnic_details {
-    subnet_id        = oci_core_subnet.public_subnet1.id
+    subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server01"
   }
@@ -324,7 +301,7 @@ resource "oci_core_instance" "linux_vm2" {
   }
 
   create_vnic_details {
-    subnet_id        = oci_core_subnet.public_subnet2.id
+    subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server02"
   }
@@ -358,8 +335,32 @@ data "oci_core_vnic" "vm2_vnic" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.private_subnet.id
-    assign_public_ip = true
+    assign_public_ip = false
     hostname_label   = "Lab-VM01"
+  }
+
+  # Reference the AMD image data source
+  source_details {
+    source_type = "image"
+    source_id   = data.oci_core_images.amd_image.images[0].id
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+  }
+}
+
+ # Create Linux VM 4 (Public Access) 
+  resource "oci_core_instance" "linux_vm4" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard.E2.1.Micro"
+  display_name        = "Public-VM04"
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public_subnet.id
+    assign_public_ip = true
+    hostname_label   = "Lab-VM04"
   }
 
   # Reference the AMD image data source
