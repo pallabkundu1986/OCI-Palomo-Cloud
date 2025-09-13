@@ -217,14 +217,14 @@ resource "oci_load_balancer_backend" "server01_backend" {
   load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
   backendset_name = oci_load_balancer_backend_set.public_backendset.name
   ip_address       = data.oci_core_vnic.vm1_vnic.private_ip_address
-  port             = 80
+  port             = 8080
 }
 
 resource "oci_load_balancer_backend" "server02_backend" {
   load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
   backendset_name = oci_load_balancer_backend_set.public_backendset.name
   ip_address       = data.oci_core_vnic.vm2_vnic.private_ip_address
-  port             = 80
+  port             = 8080
 }
 
 # Listener (HTTP)
