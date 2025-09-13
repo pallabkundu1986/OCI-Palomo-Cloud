@@ -58,7 +58,7 @@ resource "oci_core_security_list" "public_sl" {
   }
       ingress_security_rules {
     protocol = "6"  # TCP
-    source   = "10.0.30.0/24/32"
+    source   = "10.0.30.0/24"
     tcp_options {
       min = 22
       max = 22
