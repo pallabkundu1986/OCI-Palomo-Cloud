@@ -123,6 +123,14 @@ resource "oci_core_security_list" "private_sl" {
     source   = "10.0.0.0/16"
   }
 
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "152.58.183.242/32"
+    tcp_options {
+      min = 22
+      max = 22
+    }
+  }
   
   egress_security_rules {
     protocol    = "all"
@@ -140,6 +148,7 @@ resource "oci_core_subnet" "public_subnet1" {
   dns_label                  = "publicsubnet1" 
   route_table_id = oci_core_route_table.public_rt.id
   security_list_ids = [oci_core_security_list.public_sl.id]
+  availability_domain = null
 }
 
 # Server02 public subnet (same AD, different CIDR)
@@ -152,6 +161,7 @@ resource "oci_core_subnet" "public_subnet2" {
   dns_label                  = "publicsubnet2"
   route_table_id             = oci_core_route_table.public_rt.id
   security_list_ids          = [oci_core_security_list.public_sl.id]
+  availability_domain = null
 }
 
 # Create Private Subnet and attach Security List
@@ -301,7 +311,7 @@ data "oci_core_vnic" "vm1_vnic" {
 }
 
 # Create Linux VM 2 (Public Access)
-resource "oci_core_instance" "linux_vm1_clone" {
+resource "oci_core_instance" "linux_vm2" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E3.Flex"
@@ -321,7 +331,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
 
   source_details {
     source_type = "image"
-    source_id   = "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaazf34fypegtnzvocmvjfs6hjwzezehinollgci24np3cqfp225ifq"
+    source_id   = data.oci_core_images.arm_image.images[0].id
   }
 
   metadata = {
@@ -331,7 +341,7 @@ resource "oci_core_instance" "linux_vm1_clone" {
 # --- VM2 Private IP ---
 data "oci_core_vnic_attachments" "vm2_vnics" {
   compartment_id = var.compartment_ocid
-  instance_id    = oci_core_instance.linux_vm1_clone.id
+  instance_id    = oci_core_instance.linux_vm2.id
 }
 
 data "oci_core_vnic" "vm2_vnic" {
@@ -340,7 +350,7 @@ data "oci_core_vnic" "vm2_vnic" {
 
 
  # Create Linux VM 3 (Private Access) 
-  resource "oci_core_instance" "linux_vm2" {
+  resource "oci_core_instance" "linux_vm3" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E2.1.Micro"
@@ -348,7 +358,7 @@ data "oci_core_vnic" "vm2_vnic" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.private_subnet.id
-    assign_public_ip = false
+    assign_public_ip = true
     hostname_label   = "Lab-VM01"
   }
 
