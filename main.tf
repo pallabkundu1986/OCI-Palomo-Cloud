@@ -171,7 +171,6 @@ resource "oci_core_subnet" "palomo_subnet" {
   route_table_id = oci_core_route_table.private_rt.id
   security_list_ids = [oci_core_security_list.private_sl.id]
   availability_domain = null
-  route_table_id = oci_core_route_table.private_rt.id
 }
 
 # Create Private Subnet and attach Security List
