@@ -40,30 +40,6 @@ resource "oci_core_security_list" "public_sl" {
   vcn_id         = oci_core_vcn.palomo_vcn.id
   display_name   = "public-security-list"
 
-  ingress_security_rules {
-    protocol = "6"  # TCP
-    source   = "152.58.183.125/32"
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
-    ingress_security_rules {
-    protocol = "6"  # TCP
-    source   = "10.0.10.0/24"
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
-      ingress_security_rules {
-    protocol = "6"  # TCP
-    source   = "10.0.30.0/24"
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
   
   ingress_security_rules {
     protocol = "6"  # TCP
@@ -90,20 +66,6 @@ resource "oci_core_security_list" "public_sl" {
     max = 8080
   }
 }
-
- ingress_security_rules {
-  protocol = "6" # TCP
-  source   = "10.0.0.0/16"
-  tcp_options {
-    min = 8080
-    max = 8080
-  }
-}
-
-  ingress_security_rules {
-    protocol = "1"   # ICMP
-    source   = "10.0.0.0/16"
-  }
 
   egress_security_rules {
     protocol    = "all"
@@ -235,7 +197,7 @@ resource "oci_load_balancer_backend_set" "public_backendset" {
 
   health_checker {
     protocol = "HTTP"
-    port     = 80
+    port     = 8080
     url_path = "/"
     return_code = 200
   }
@@ -263,7 +225,7 @@ resource "oci_load_balancer_listener" "http_listener" {
   name                     = "http-listener"
   default_backend_set_name = oci_load_balancer_backend_set.public_backendset.name
   protocol                 = "HTTP"
-  port                     = 80
+  port                     = 8080
 }
 
 # Create Linux VM 1 (Public Access)
