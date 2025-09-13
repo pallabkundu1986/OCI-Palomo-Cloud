@@ -40,6 +40,14 @@ resource "oci_core_security_list" "public_sl" {
   vcn_id         = oci_core_vcn.palomo_vcn.id
   display_name   = "public-security-list"
 
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "152.58.183.125/32"
+    tcp_options {
+      min = 22
+      max = 22
+    }
+  }
   
   ingress_security_rules {
     protocol = "6"  # TCP
