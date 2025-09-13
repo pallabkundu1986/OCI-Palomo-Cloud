@@ -146,17 +146,32 @@ resource "oci_core_security_list" "private_sl" {
   }
 }
 
-# Create Public subnet
-resource "oci_core_subnet" "public_subnet" {
+
+# Create Public subnet 
+resource "oci_core_subnet" "public_subnet" { 
+	vcn_id = oci_core_vcn.palomo_vcn.id 
+	cidr_block = "10.0.10.0/24" 
+	display_name = "public-subnet-1" 
+	compartment_id = var.compartment_ocid 
+	prohibit_public_ip_on_vnic = false 
+	dns_label = "publicsubnet1" 
+	route_table_id = oci_core_route_table.public_rt.id 
+	security_list_ids = [oci_core_security_list.public_sl.id]  
+	
+}
+
+# Create Palomo subnet
+resource "oci_core_subnet" "palomo_subnet" {
   vcn_id                     = oci_core_vcn.palomo_vcn.id
-  cidr_block                 = "10.0.10.0/24"
-  display_name               = "public-subnet-1"
+  cidr_block                 = "10.0.20.0/24"
+  display_name               = "public-subnet"
   compartment_id             = var.compartment_ocid
-  prohibit_public_ip_on_vnic = false
-  dns_label                  = "publicsubnet1" 
-  route_table_id = oci_core_route_table.public_rt.id
-  security_list_ids = [oci_core_security_list.public_sl.id]
+  prohibit_public_ip_on_vnic = true
+  dns_label                  = "palomosubnet" 
+  route_table_id = oci_core_route_table.private_rt.id
+  security_list_ids = [oci_core_security_list.private_sl.id]
   availability_domain = null
+  route_table_id = oci_core_route_table.private_rt.id
 }
 
 # Create Private Subnet and attach Security List
@@ -167,12 +182,7 @@ resource "oci_core_subnet" "private_subnet" {
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = true
   dns_label                  = "privatesubnet" 
-
-  # Attach security list
-  security_list_ids = [
-    oci_core_security_list.private_sl.id
-  ]
-  # Attach NAT route table
+  security_list_ids = [oci_core_security_list.private_sl.id]
   route_table_id = oci_core_route_table.private_rt.id
 }
 
@@ -279,7 +289,7 @@ resource "oci_core_instance" "linux_vm1" {
   }
 
   create_vnic_details {
-    subnet_id        = oci_core_subnet.public_subnet.id
+    subnet_id        = oci_core_subnet.palomo_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server01"
   }
@@ -317,7 +327,7 @@ resource "oci_core_instance" "linux_vm2" {
   }
 
   create_vnic_details {
-    subnet_id        = oci_core_subnet.public_subnet.id
+    subnet_id        = oci_core_subnet.palomo_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server02"
   }
