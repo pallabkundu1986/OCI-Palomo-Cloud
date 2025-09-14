@@ -284,7 +284,7 @@ resource "oci_core_instance" "linux_vm1" {
 		yum makecache
 		yum -y update
 
-		# Install required packages (with retry in case repo not ready yet)
+		# Install required packages
 		for i in {1..5}; do
 		  yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils && break || sleep 10
 		done
@@ -302,8 +302,6 @@ resource "oci_core_instance" "linux_vm1" {
 		# Enable and start firewalld
 		systemctl enable firewalld
 		systemctl start firewalld
-
-		# Open port 8080 permanently in firewall
 		firewall-cmd --permanent --add-port=8080/tcp
 		firewall-cmd --reload
 
@@ -316,9 +314,9 @@ resource "oci_core_instance" "linux_vm1" {
 		systemctl start mariadb
 
 		# Create DB and user
-		mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
-		mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
-		mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%'; FLUSH PRIVILEGES;"
+		mysql -e "CREATE DATABASE IF NOT EXISTS $${DB_NAME};"
+		mysql -e "CREATE USER IF NOT EXISTS '$${DB_USER}'@'%' IDENTIFIED BY '$${DB_PASS}';"
+		mysql -e "GRANT ALL PRIVILEGES ON $${DB_NAME}.* TO '$${DB_USER}'@'%'; FLUSH PRIVILEGES;"
 
 		# Create health check page
 		echo "OK" > /var/www/html/palomo.html
@@ -336,14 +334,14 @@ resource "oci_core_instance" "linux_vm1" {
 
 		# Configure wp-config.php
 		cp wp-config-sample.php wp-config.php
-		sed -i "s/database_name_here/${DB_NAME}/" wp-config.php
-		sed -i "s/username_here/${DB_USER}/" wp-config.php
-		sed -i "s/password_here/${DB_PASS}/" wp-config.php
+		sed -i "s/database_name_here/$${DB_NAME}/" wp-config.php
+		sed -i "s/username_here/$${DB_USER}/" wp-config.php
+		sed -i "s/password_here/$${DB_PASS}/" wp-config.php
 
-		# Set WordPress salts (auto-generate for security)
+		# Add WordPress salts
 		curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
 
-		# Restart Apache to apply changes
+		# Restart Apache
 		systemctl restart httpd
 		EOT
 		)
@@ -402,7 +400,7 @@ resource "oci_core_instance" "linux_vm2" {
 		yum makecache
 		yum -y update
 
-		# Install required packages (with retry in case repo not ready yet)
+		# Install required packages
 		for i in {1..5}; do
 		  yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils && break || sleep 10
 		done
@@ -420,8 +418,6 @@ resource "oci_core_instance" "linux_vm2" {
 		# Enable and start firewalld
 		systemctl enable firewalld
 		systemctl start firewalld
-
-		# Open port 8080 permanently in firewall
 		firewall-cmd --permanent --add-port=8080/tcp
 		firewall-cmd --reload
 
@@ -434,9 +430,9 @@ resource "oci_core_instance" "linux_vm2" {
 		systemctl start mariadb
 
 		# Create DB and user
-		mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
-		mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
-		mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%'; FLUSH PRIVILEGES;"
+		mysql -e "CREATE DATABASE IF NOT EXISTS $${DB_NAME};"
+		mysql -e "CREATE USER IF NOT EXISTS '$${DB_USER}'@'%' IDENTIFIED BY '$${DB_PASS}';"
+		mysql -e "GRANT ALL PRIVILEGES ON $${DB_NAME}.* TO '$${DB_USER}'@'%'; FLUSH PRIVILEGES;"
 
 		# Create health check page
 		echo "OK" > /var/www/html/palomo.html
@@ -454,14 +450,14 @@ resource "oci_core_instance" "linux_vm2" {
 
 		# Configure wp-config.php
 		cp wp-config-sample.php wp-config.php
-		sed -i "s/database_name_here/${DB_NAME}/" wp-config.php
-		sed -i "s/username_here/${DB_USER}/" wp-config.php
-		sed -i "s/password_here/${DB_PASS}/" wp-config.php
+		sed -i "s/database_name_here/$${DB_NAME}/" wp-config.php
+		sed -i "s/username_here/$${DB_USER}/" wp-config.php
+		sed -i "s/password_here/$${DB_PASS}/" wp-config.php
 
-		# Set WordPress salts (auto-generate for security)
+		# Add WordPress salts
 		curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
 
-		# Restart Apache to apply changes
+		# Restart Apache
 		systemctl restart httpd
 		EOT
 		)
