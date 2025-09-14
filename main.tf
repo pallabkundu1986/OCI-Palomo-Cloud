@@ -267,7 +267,11 @@ resource "oci_core_instance" "linux_vm1" {
 	user_data = base64encode(<<-EOT
     #!/bin/bash
     yum update -y
-    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip
+    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
+
+    # Change Apache to listen on port 8080
+    sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+    semanage port -a -t http_port_t -p tcp 8080 || semanage port -m -t http_port_t -p tcp 8080
 
     # Start Apache and MariaDB
     systemctl start httpd
@@ -288,10 +292,10 @@ resource "oci_core_instance" "linux_vm1" {
     chown -R apache:apache /var/www/html
     chmod -R 755 /var/www/html
 
-    # Restart services
+    # Restart Apache on new port
     systemctl restart httpd
-  EOT
-  )
+EOT
+)
   
   }  
 }
@@ -337,7 +341,11 @@ resource "oci_core_instance" "linux_vm2" {
 	user_data = base64encode(<<-EOT
     #!/bin/bash
     yum update -y
-    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip
+    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
+
+    # Change Apache to listen on port 8080
+    sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+    semanage port -a -t http_port_t -p tcp 8080 || semanage port -m -t http_port_t -p tcp 8080
 
     # Start Apache and MariaDB
     systemctl start httpd
@@ -358,10 +366,10 @@ resource "oci_core_instance" "linux_vm2" {
     chown -R apache:apache /var/www/html
     chmod -R 755 /var/www/html
 
-    # Restart services
+    # Restart Apache on new port
     systemctl restart httpd
-  EOT
-  )
+EOT
+)
 	
   }
 }
