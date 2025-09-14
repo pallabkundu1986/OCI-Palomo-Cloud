@@ -65,14 +65,6 @@ resource "oci_core_security_list" "public_sl" {
       max = 80
     }
   }
-   ingress_security_rules {
-  protocol = "6" # TCP
-  source   = "157.40.126.243/32"
-  tcp_options {
-    min = 80
-    max = 80
-  }
-}
 
  ingress_security_rules {
   protocol = "6" # TCP
@@ -83,14 +75,6 @@ resource "oci_core_security_list" "public_sl" {
   }
 }
 
- ingress_security_rules {
-  protocol = "6" # TCP
-  source   = "157.40.126.243/32"
-  tcp_options {
-    min = 8080
-    max = 8080
-  }
-}
 
   egress_security_rules {
     protocol    = "all"
