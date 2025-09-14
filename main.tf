@@ -271,58 +271,80 @@ resource "oci_core_instance" "linux_vm1" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
 	
-			user_data = base64encode(<<-EOT
-		  #!/bin/bash
-		  set -e
+		user_data = base64encode(<<-EOT
+		#!/bin/bash
+		set -euxo pipefail
 
-		  # Update system
-		  yum update -y
+		DB_PASS="${random_password.db_password.result}"
+		DB_NAME="shopdb"
+		DB_USER="shopuser"
 
-		  # Install Apache, PHP, MariaDB, wget, unzip
-		  yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
+		# Update system
+		yum clean all
+		yum makecache
+		yum -y update
 
-		  # Configure Apache to listen on 8080
-		  sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+		# Install required packages (with retry in case repo not ready yet)
+		for i in {1..5}; do
+		  yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils && break || sleep 10
+		done
 
-		  # Configure SELinux for port 8080
-		  if ! semanage port -l | grep -q "8080.*http_port_t"; then
-			semanage port -a -t http_port_t -p tcp 8080
+		# Configure Apache to listen on 8080
+		sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+
+		# Configure SELinux for port 8080
+		if command -v semanage &>/dev/null; then
+		  if ! semanage port -l | grep -qw "8080"; then
+			semanage port -a -t http_port_t -p tcp 8080 || true
 		  fi
+		fi
 
-		  # (Optional) Firewalld – only needed if you want local firewall + OCI security lists
-		  systemctl enable firewalld
-		  systemctl start firewalld
-		  firewall-cmd --permanent --add-port=8080/tcp
-		  firewall-cmd --reload
+		# Enable and start firewalld
+		systemctl enable firewalld
+		systemctl start firewalld
 
-		  # Enable and start Apache
-		  systemctl enable httpd
-		  systemctl start httpd
+		# Open port 8080 permanently in firewall
+		firewall-cmd --permanent --add-port=8080/tcp
+		firewall-cmd --reload
 
-		  # Enable and start MariaDB
-		  systemctl enable mariadb
-		  systemctl start mariadb
+		# Enable and start Apache
+		systemctl enable httpd
+		systemctl restart httpd
 
-		  # Create DB and user with Terraform-generated random password
-		  mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
-		  mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY '${random_password.db_password.result}';"
-		  mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+		# Enable and start MariaDB
+		systemctl enable mariadb
+		systemctl start mariadb
 
-		  # Create health check page
-		  echo "OK" > /var/www/html/palomo.html
-		  chown apache:apache /var/www/html/palomo.html
-		  chmod 644 /var/www/html/palomo.html
+		# Create DB and user
+		mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
+		mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
+		mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%'; FLUSH PRIVILEGES;"
 
-		  # Install WordPress
-		  cd /var/www/html
-		  wget https://wordpress.org/latest.tar.gz
-		  tar -xzf latest.tar.gz
-		  mv wordpress/* . || true
-		  chown -R apache:apache /var/www/html
-		  chmod -R 755 /var/www/html
+		# Create health check page
+		echo "OK" > /var/www/html/palomo.html
+		chown apache:apache /var/www/html/palomo.html
+		chmod 644 /var/www/html/palomo.html
 
-		  # Restart Apache to apply all changes
-		  systemctl restart httpd
+		# Install WordPress
+		cd /var/www/html
+		wget https://wordpress.org/latest.tar.gz
+		tar -xvzf latest.tar.gz
+		mv wordpress/* . || true
+		rm -rf wordpress latest.tar.gz
+		chown -R apache:apache /var/www/html
+		chmod -R 755 /var/www/html
+
+		# Configure wp-config.php
+		cp wp-config-sample.php wp-config.php
+		sed -i "s/database_name_here/${DB_NAME}/" wp-config.php
+		sed -i "s/username_here/${DB_USER}/" wp-config.php
+		sed -i "s/password_here/${DB_PASS}/" wp-config.php
+
+		# Set WordPress salts (auto-generate for security)
+		curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
+
+		# Restart Apache to apply changes
+		systemctl restart httpd
 		EOT
 		)
   
@@ -367,58 +389,80 @@ resource "oci_core_instance" "linux_vm2" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
 	
-			user_data = base64encode(<<-EOT
-		  #!/bin/bash
-		  set -e
+		user_data = base64encode(<<-EOT
+		#!/bin/bash
+		set -euxo pipefail
 
-		  # Update system
-		  yum update -y
+		DB_PASS="${random_password.db_password.result}"
+		DB_NAME="shopdb"
+		DB_USER="shopuser"
 
-		  # Install Apache, PHP, MariaDB, wget, unzip
-		  yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
+		# Update system
+		yum clean all
+		yum makecache
+		yum -y update
 
-		  # Configure Apache to listen on 8080
-		  sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+		# Install required packages (with retry in case repo not ready yet)
+		for i in {1..5}; do
+		  yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils && break || sleep 10
+		done
 
-		  # Configure SELinux for port 8080
-		  if ! semanage port -l | grep -q "8080.*http_port_t"; then
-			semanage port -a -t http_port_t -p tcp 8080
+		# Configure Apache to listen on 8080
+		sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+
+		# Configure SELinux for port 8080
+		if command -v semanage &>/dev/null; then
+		  if ! semanage port -l | grep -qw "8080"; then
+			semanage port -a -t http_port_t -p tcp 8080 || true
 		  fi
+		fi
 
-		  # (Optional) Firewalld – only needed if you want local firewall + OCI security lists
-		  systemctl enable firewalld
-		  systemctl start firewalld
-		  firewall-cmd --permanent --add-port=8080/tcp
-		  firewall-cmd --reload
+		# Enable and start firewalld
+		systemctl enable firewalld
+		systemctl start firewalld
 
-		  # Enable and start Apache
-		  systemctl enable httpd
-		  systemctl start httpd
+		# Open port 8080 permanently in firewall
+		firewall-cmd --permanent --add-port=8080/tcp
+		firewall-cmd --reload
 
-		  # Enable and start MariaDB
-		  systemctl enable mariadb
-		  systemctl start mariadb
+		# Enable and start Apache
+		systemctl enable httpd
+		systemctl restart httpd
 
-		  # Create DB and user with Terraform-generated random password
-		  mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
-		  mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY '${random_password.db_password.result}';"
-		  mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+		# Enable and start MariaDB
+		systemctl enable mariadb
+		systemctl start mariadb
 
-		  # Create health check page
-		  echo "OK" > /var/www/html/palomo.html
-		  chown apache:apache /var/www/html/palomo.html
-		  chmod 644 /var/www/html/palomo.html
+		# Create DB and user
+		mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
+		mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
+		mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%'; FLUSH PRIVILEGES;"
 
-		  # Install WordPress
-		  cd /var/www/html
-		  wget https://wordpress.org/latest.tar.gz
-		  tar -xzf latest.tar.gz
-		  mv wordpress/* . || true
-		  chown -R apache:apache /var/www/html
-		  chmod -R 755 /var/www/html
+		# Create health check page
+		echo "OK" > /var/www/html/palomo.html
+		chown apache:apache /var/www/html/palomo.html
+		chmod 644 /var/www/html/palomo.html
 
-		  # Restart Apache to apply all changes
-		  systemctl restart httpd
+		# Install WordPress
+		cd /var/www/html
+		wget https://wordpress.org/latest.tar.gz
+		tar -xvzf latest.tar.gz
+		mv wordpress/* . || true
+		rm -rf wordpress latest.tar.gz
+		chown -R apache:apache /var/www/html
+		chmod -R 755 /var/www/html
+
+		# Configure wp-config.php
+		cp wp-config-sample.php wp-config.php
+		sed -i "s/database_name_here/${DB_NAME}/" wp-config.php
+		sed -i "s/username_here/${DB_USER}/" wp-config.php
+		sed -i "s/password_here/${DB_PASS}/" wp-config.php
+
+		# Set WordPress salts (auto-generate for security)
+		curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
+
+		# Restart Apache to apply changes
+		systemctl restart httpd
 		EOT
 		)
 	
