@@ -262,6 +262,36 @@ resource "oci_core_instance" "linux_vm1" {
 	  }
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
+	
+	user_data = base64encode(<<-EOT
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip
+
+    # Start Apache and MariaDB
+    systemctl start httpd
+    systemctl enable httpd
+    systemctl start mariadb
+    systemctl enable mariadb
+
+    # Configure MariaDB (basic setup)
+    mysql -e "CREATE DATABASE shopdb;"
+    mysql -e "CREATE USER 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
+    mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+
+    # Install WordPress
+    cd /var/www/html
+    wget https://wordpress.org/latest.tar.gz
+    tar -xvzf latest.tar.gz
+    mv wordpress/* .
+    chown -R apache:apache /var/www/html
+    chmod -R 755 /var/www/html
+
+    # Restart services
+    systemctl restart httpd
+  EOT
+  )
+  
   }  
 }
 
@@ -301,6 +331,36 @@ resource "oci_core_instance" "linux_vm2" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
+	
+	user_data = base64encode(<<-EOT
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip
+
+    # Start Apache and MariaDB
+    systemctl start httpd
+    systemctl enable httpd
+    systemctl start mariadb
+    systemctl enable mariadb
+
+    # Configure MariaDB (basic setup)
+    mysql -e "CREATE DATABASE shopdb;"
+    mysql -e "CREATE USER 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
+    mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+
+    # Install WordPress
+    cd /var/www/html
+    wget https://wordpress.org/latest.tar.gz
+    tar -xvzf latest.tar.gz
+    mv wordpress/* .
+    chown -R apache:apache /var/www/html
+    chmod -R 755 /var/www/html
+
+    # Restart services
+    systemctl restart httpd
+  EOT
+  )
+	
   }
 }
 # --- VM2 Private IP ---
