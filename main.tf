@@ -254,7 +254,7 @@ resource "oci_core_instance" "linux_vm1" {
     subnet_id        = oci_core_subnet.palomo_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server01"
-	private_ip       = "10.0.20.10
+	private_ip       = "10.0.20.10"
   }
     # Reference the ARM image data source
   source_details {
@@ -323,7 +323,7 @@ resource "oci_core_instance" "linux_vm2" {
     subnet_id        = oci_core_subnet.palomo_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server02"
-	private_ip       = "10.0.20.11
+	private_ip       = "10.0.20.11"
   }
 
   source_details {
