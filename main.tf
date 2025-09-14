@@ -208,7 +208,6 @@ resource "oci_load_balancer_backend_set" "public_backendset" {
     protocol = "HTTP"
     port     = 8080
     url_path = "/"
-    return_code = 200
   }
 }
 
