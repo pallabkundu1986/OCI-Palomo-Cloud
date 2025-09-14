@@ -201,7 +201,7 @@ resource "oci_load_balancer_load_balancer" "public_lb" {
 # Backend Set
 resource "oci_load_balancer_backend_set" "public_backendset" {
   load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
-  name             = "public-LB-backendset"
+  name             = "public-backendset"
   policy           = "ROUND_ROBIN"
 
   health_checker {
