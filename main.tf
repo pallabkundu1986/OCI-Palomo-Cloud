@@ -509,7 +509,7 @@ data "oci_core_vnic" "vm2_vnic" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "Lab-VM01"
+    hostname_label   = "Public-VM04"
   }
 
   # Reference the AMD image data source
