@@ -205,9 +205,12 @@ resource "oci_load_balancer_backend_set" "public_backendset" {
   policy           = "ROUND_ROBIN"
 
   health_checker {
-    protocol = "HTTP"
-    port     = 8080
-    url_path = "/"
+    protocol    = "HTTP"
+    port        = 8080
+    url_path    = "/palomo.html"
+    retries     = 3
+    timeout_in_millis = 3000
+    interval_in_millis = 10000
   }
 }
 
@@ -283,6 +286,11 @@ resource "oci_core_instance" "linux_vm1" {
     mysql -e "CREATE USER 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
     mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
 
+	# Create health check page
+	echo "OK" > /var/www/html/palomo.html
+	chown apache:apache /var/www/html/palomo.html
+	chmod 644 /var/www/html/palomo.html
+
     # Install WordPress
     cd /var/www/html
     wget https://wordpress.org/latest.tar.gz
@@ -356,6 +364,11 @@ resource "oci_core_instance" "linux_vm2" {
     mysql -e "CREATE DATABASE shopdb;"
     mysql -e "CREATE USER 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
     mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+
+	# Create health check page
+	echo "OK" > /var/www/html/palomo.html
+	chown apache:apache /var/www/html/palomo.html
+	chmod 644 /var/www/html/palomo.html
 
     # Install WordPress
     cd /var/www/html
