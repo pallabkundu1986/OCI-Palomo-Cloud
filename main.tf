@@ -209,7 +209,7 @@ resource "oci_load_balancer_backend_set" "public_backendset" {
     port        = 8080
     url_path    = "/palomo.html"
     retries     = 3
-    return_code = 200
+  
   }
 }
 
@@ -266,42 +266,44 @@ resource "oci_core_instance" "linux_vm1" {
     ssh_authorized_keys = var.ssh_public_key
 	
 	user_data = base64encode(<<-EOT
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
+      #!/bin/bash
+      set -e
+      exec > >(tee /var/log/user_data.log|logger -t user_data -s 2>/dev/console) 2>&1
 
-    # Change Apache to listen on port 8080
-    sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
-    semanage port -a -t http_port_t -p tcp 8080 || semanage port -m -t http_port_t -p tcp 8080
+      # Update system and install packages
+      yum update -y
+      yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
 
-    # Start Apache and MariaDB
-    systemctl start httpd
-    systemctl enable httpd
-    systemctl start mariadb
-    systemctl enable mariadb
+      # Configure Apache to listen on 8080
+      sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+      semanage port -a -t http_port_t -p tcp 8080 || semanage port -m -t http_port_t -p tcp 8080
 
-    # Configure MariaDB (basic setup)
-    mysql -e "CREATE DATABASE shopdb;"
-    mysql -e "CREATE USER 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
-    mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+      # Start services
+      systemctl enable --now httpd
+      systemctl enable --now mariadb
 
-	# Create health check page
-	echo "OK" > /var/www/html/palomo.html
-	chown apache:apache /var/www/html/palomo.html
-	chmod 644 /var/www/html/palomo.html
+      # Configure MariaDB
+      mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
+      mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
+      mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
 
-    # Install WordPress
-    cd /var/www/html
-    wget https://wordpress.org/latest.tar.gz
-    tar -xvzf latest.tar.gz
-    mv wordpress/* .
-    chown -R apache:apache /var/www/html
-    chmod -R 755 /var/www/html
+      # Create health check page
+      echo "OK" > /var/www/html/palomo.html
+      chown apache:apache /var/www/html/palomo.html
+      chmod 644 /var/www/html/palomo.html
 
-    # Restart Apache on new port
-    systemctl restart httpd
-EOT
-)
+      # Install WordPress
+      cd /var/www/html
+      wget https://wordpress.org/latest.tar.gz
+      tar -xvzf latest.tar.gz
+      mv wordpress/* .
+      chown -R apache:apache /var/www/html
+      chmod -R 755 /var/www/html
+
+      # Restart Apache
+      systemctl restart httpd
+    EOT
+    )
   
   }  
 }
@@ -345,42 +347,44 @@ resource "oci_core_instance" "linux_vm2" {
     ssh_authorized_keys = var.ssh_public_key
 	
 	user_data = base64encode(<<-EOT
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
+      #!/bin/bash
+      set -e
+      exec > >(tee /var/log/user_data.log|logger -t user_data -s 2>/dev/console) 2>&1
 
-    # Change Apache to listen on port 8080
-    sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
-    semanage port -a -t http_port_t -p tcp 8080 || semanage port -m -t http_port_t -p tcp 8080
+      # Update system and install packages
+      yum update -y
+      yum install -y httpd php php-mysqlnd php-fpm php-xml php-gd php-cli mariadb-server wget unzip policycoreutils-python-utils
 
-    # Start Apache and MariaDB
-    systemctl start httpd
-    systemctl enable httpd
-    systemctl start mariadb
-    systemctl enable mariadb
+      # Configure Apache to listen on 8080
+      sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf
+      semanage port -a -t http_port_t -p tcp 8080 || semanage port -m -t http_port_t -p tcp 8080
 
-    # Configure MariaDB (basic setup)
-    mysql -e "CREATE DATABASE shopdb;"
-    mysql -e "CREATE USER 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
-    mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+      # Start services
+      systemctl enable --now httpd
+      systemctl enable --now mariadb
 
-	# Create health check page
-	echo "OK" > /var/www/html/palomo.html
-	chown apache:apache /var/www/html/palomo.html
-	chmod 644 /var/www/html/palomo.html
+      # Configure MariaDB
+      mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
+      mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
+      mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
 
-    # Install WordPress
-    cd /var/www/html
-    wget https://wordpress.org/latest.tar.gz
-    tar -xvzf latest.tar.gz
-    mv wordpress/* .
-    chown -R apache:apache /var/www/html
-    chmod -R 755 /var/www/html
+      # Create health check page
+      echo "OK" > /var/www/html/palomo.html
+      chown apache:apache /var/www/html/palomo.html
+      chmod 644 /var/www/html/palomo.html
 
-    # Restart Apache on new port
-    systemctl restart httpd
-EOT
-)
+      # Install WordPress
+      cd /var/www/html
+      wget https://wordpress.org/latest.tar.gz
+      tar -xvzf latest.tar.gz
+      mv wordpress/* .
+      chown -R apache:apache /var/www/html
+      chmod -R 755 /var/www/html
+
+      # Restart Apache
+      systemctl restart httpd
+    EOT
+    )
 	
   }
 }
