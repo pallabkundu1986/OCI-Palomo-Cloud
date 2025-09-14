@@ -241,7 +241,7 @@ resource "oci_load_balancer_listener" "http_listener" {
 resource "random_password" "db_password" {
   length           = 16
   special          = true
-  override_characters = "!@#$%^&*()-_=+"
+  override_special = "!@#$%^&*()-_=+"
 }
 
 # Create Linux VM 1 (Public Access)
