@@ -217,14 +217,14 @@ resource "oci_load_balancer_backend_set" "public_backendset" {
 resource "oci_load_balancer_backend" "server01_backend" {
   load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
   backendset_name = oci_load_balancer_backend_set.public_backendset.name
-  ip_address       = data.oci_core_vnic.vm1_vnic.private_ip_address
+  ip_address       = "10.0.20.10"
   port             = 8080
 }
 
 resource "oci_load_balancer_backend" "server02_backend" {
   load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
   backendset_name = oci_load_balancer_backend_set.public_backendset.name
-  ip_address       = data.oci_core_vnic.vm2_vnic.private_ip_address
+  ip_address       = "10.0.20.11"
   port             = 8080
 }
 
@@ -254,6 +254,7 @@ resource "oci_core_instance" "linux_vm1" {
     subnet_id        = oci_core_subnet.palomo_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server01"
+	private_ip       = "10.0.20.10
   }
     # Reference the ARM image data source
   source_details {
@@ -322,6 +323,7 @@ resource "oci_core_instance" "linux_vm2" {
     subnet_id        = oci_core_subnet.palomo_subnet.id
     assign_public_ip = false
     hostname_label   = "VM-Server02"
+	private_ip       = "10.0.20.11
   }
 
   source_details {
