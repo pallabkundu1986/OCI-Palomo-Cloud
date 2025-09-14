@@ -209,8 +209,7 @@ resource "oci_load_balancer_backend_set" "public_backendset" {
     port        = 8080
     url_path    = "/palomo.html"
     retries     = 3
-    timeout_in_millis = 3000
-    interval_in_millis = 10000
+    return_code = 200
   }
 }
 
