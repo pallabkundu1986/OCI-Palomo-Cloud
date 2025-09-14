@@ -201,7 +201,7 @@ resource "oci_load_balancer_load_balancer" "public_lb" {
 # Backend Set
 resource "oci_load_balancer_backend_set" "public_backendset" {
   load_balancer_id = oci_load_balancer_load_balancer.public_lb.id
-  name             = "public-backendset"
+  name             = "public-LB-backendset"
   policy           = "ROUND_ROBIN"
 
   health_checker {
@@ -417,7 +417,7 @@ data "oci_core_vnic" "vm2_vnic" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "Lab-VM04"
+    hostname_label   = "Lab-VM01"
   }
 
   # Reference the AMD image data source
