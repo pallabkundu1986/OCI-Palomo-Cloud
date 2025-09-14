@@ -238,6 +238,12 @@ resource "oci_load_balancer_listener" "http_listener" {
   port                     = 8080
 }
 
+resource "random_password" "db_password" {
+  length           = 16
+  special          = true
+  override_characters = "!@#$%^&*()-_=+"
+}
+
 # Create Linux VM 1 (Public Access)
 resource "oci_core_instance" "linux_vm1" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
@@ -280,6 +286,14 @@ resource "oci_core_instance" "linux_vm1" {
 		if ! semanage port -l | grep -qw http_port_t | grep -qw 8080; then
 			semanage port -a -t http_port_t -p tcp 8080
 		fi
+		
+		# Enable and start firewalld
+			systemctl enable firewalld
+			systemctl start firewalld
+
+		# Open port 8080 permanently in firewall
+			firewall-cmd --permanent --add-port=8080/tcp
+			firewall-cmd --reload
 
 		# Enable and start Apache
 		systemctl enable httpd
@@ -289,10 +303,12 @@ resource "oci_core_instance" "linux_vm1" {
 		systemctl enable mariadb
 		systemctl start mariadb
 
-		# Configure MariaDB: create DB and user
+		# Create DB and user with secure password
+		DB_PASS="${random_password.db_password.result}"
 		mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
-		mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
+		mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY '${DB_PASS}';"
 		mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+
 
 		# Create health check page
 		echo "OK" > /var/www/html/palomo.html
@@ -368,6 +384,14 @@ resource "oci_core_instance" "linux_vm2" {
 		if ! semanage port -l | grep -qw http_port_t | grep -qw 8080; then
 			semanage port -a -t http_port_t -p tcp 8080
 		fi
+		
+		# Enable and start firewalld
+			systemctl enable firewalld
+			systemctl start firewalld
+
+		# Open port 8080 permanently in firewall
+			firewall-cmd --permanent --add-port=8080/tcp
+			firewall-cmd --reload
 
 		# Enable and start Apache
 		systemctl enable httpd
@@ -377,10 +401,12 @@ resource "oci_core_instance" "linux_vm2" {
 		systemctl enable mariadb
 		systemctl start mariadb
 
-		# Configure MariaDB: create DB and user
-		mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
-		mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY 'Momo@943';"
-		mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+		# Create DB and user with secure password
+			DB_PASS="${random_password.db_password.result}"
+			mysql -e "CREATE DATABASE IF NOT EXISTS shopdb;"
+			mysql -e "CREATE USER IF NOT EXISTS 'shopuser'@'%' IDENTIFIED BY '${DB_PASS}';"
+			mysql -e "GRANT ALL PRIVILEGES ON shopdb.* TO 'shopuser'@'%'; FLUSH PRIVILEGES;"
+
 
 		# Create health check page
 		echo "OK" > /var/www/html/palomo.html
