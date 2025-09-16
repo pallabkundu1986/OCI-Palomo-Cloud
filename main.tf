@@ -542,15 +542,16 @@ data "oci_core_vnic" "vm2_vnic" {
   }
 }
 
+# Get latest Windows Server 2019 Standard image
 data "oci_core_images" "windows_image" {
-  compartment_id           = var.compartment_ocid
-  operating_system         = "Windows"
+  compartment_id = var.compartment_ocid
+  operating_system = "Windows"
   operating_system_version = "Server 2019 Standard"
-  sort_by                  = "TIMECREATED"
-  sort_order               = "DESC"
+  shape = "VM.Standard.E4.Flex"
+  sort_by = "TIMECREATED"
 }
 
-# Create Windows VM (Public Access)
+# Create Windows VM
 resource "oci_core_instance" "windows_vm1" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
@@ -559,7 +560,7 @@ resource "oci_core_instance" "windows_vm1" {
 
   shape_config {
     ocpus         = 1    # Minimum for E4.Flex
-    memory_in_gbs = 16   # Recommended for Windows
+    memory_in_gbs = 16   # Minimum recommended for Windows
   }
 
   create_vnic_details {
@@ -574,7 +575,8 @@ resource "oci_core_instance" "windows_vm1" {
   }
 
   metadata = {
-    admin_password = "Momo@943"
+    # Windows requires an Admin password instead of SSH keys
+    "admin_password" = "Momo@9432169792"   # Must meet OCI complexity rules
   }
 }
 
