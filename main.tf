@@ -546,8 +546,13 @@ data "oci_core_vnic" "vm2_vnic" {
 resource "oci_core_instance" "windows_vm1" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
-  shape               = "VM.Standard.E2.1.Micro"
+  shape               = "VM.Standard.E4.Flex"
   display_name        = "Public-Windows-VM01"
+
+shape_config {
+    ocpus         = 1    # Minimum for E4.Flex
+    memory_in_gbs = 16   # Minimum memory required for Windows
+  }
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
