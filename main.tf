@@ -578,16 +578,6 @@ resource "oci_core_instance" "windows_vm1" {
   }
 }
 
-# Data source to fetch latest Windows Server 2022 image
-data "oci_core_images" "windows_image" {
-  compartment_id           = var.compartment_ocid
-  operating_system         = "Windows"
-  shape                    = "VM.Standard.E2.1"
-  sort_by                  = "TIMECREATED"
-  sort_order               = "DESC"
- }
-
-
 # --- create the pfSense instance (primary VNIC = WAN in public subnet) ---
 resource "oci_core_instance" "pfsense" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
