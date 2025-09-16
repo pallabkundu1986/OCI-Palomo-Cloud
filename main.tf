@@ -68,7 +68,7 @@ resource "oci_core_security_list" "public_sl" {
 
  ingress_security_rules {
   protocol = "6" # TCP
-  source   = "152.58.183.96/32"
+  source   = "0.0.0.0/0"
   tcp_options {
     min = 8080
     max = 8080
