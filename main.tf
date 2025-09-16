@@ -74,7 +74,14 @@ resource "oci_core_security_list" "public_sl" {
     max = 8080
   }
 }
-
+ingress_security_rules {
+  protocol = "6"   # TCP
+  source   = "152.58.183.96/32"
+  tcp_options {
+    min = 3389
+    max = 3389
+  }
+}
 
   egress_security_rules {
     protocol    = "all"
@@ -127,7 +134,7 @@ resource "oci_core_subnet" "public_subnet" {
 resource "oci_core_subnet" "palomo_subnet" {
   vcn_id                     = oci_core_vcn.palomo_vcn.id
   cidr_block                 = "10.0.20.0/24"
-  display_name               = "public-subnet"
+  display_name               = "palomo-subnet"
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = true
   dns_label                  = "palomosubnet" 
@@ -144,6 +151,18 @@ resource "oci_core_subnet" "private_subnet" {
   compartment_id             = var.compartment_ocid
   prohibit_public_ip_on_vnic = true
   dns_label                  = "privatesubnet" 
+  security_list_ids = [oci_core_security_list.private_sl.id]
+  route_table_id = oci_core_route_table.private_rt.id
+}
+
+# Create Firewall Private Subnet and attach Security List
+resource "oci_core_subnet" "firewall_subnet" {
+  vcn_id                     = oci_core_vcn.palomo_vcn.id
+  cidr_block                 = "10.0.40.0/24"
+  display_name               = "firewall_subnet"
+  compartment_id             = var.compartment_ocid
+  prohibit_public_ip_on_vnic = true
+  dns_label                  = "firewallsubnet" 
   security_list_ids = [oci_core_security_list.private_sl.id]
   route_table_id = oci_core_route_table.private_rt.id
 }
@@ -521,4 +540,114 @@ data "oci_core_vnic" "vm2_vnic" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
   }
+}
+
+# Create Windows VM (Public Access)
+resource "oci_core_instance" "windows_vm1" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard.E2.1.Micro"
+  display_name        = "Public-Windows-VM01"
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public_subnet.id
+    assign_public_ip = true
+    hostname_label   = "public-windows-vm01"
+  }
+
+  # Reference the latest Windows image from data source
+  source_details {
+    source_type = "image"
+    source_id   = data.oci_core_images.windows_image.images[0].id
+  }
+
+  metadata = {
+
+    "admin_password" = "Momo@943"
+  }
+}
+
+# Data source to fetch latest Windows Server 2022 image
+data "oci_core_images" "windows_image" {
+  compartment_id           = var.compartment_ocid
+  operating_system         = "Windows"
+  shape                    = "VM.Standard.E2.1"
+  sort_by                  = "TIMECREATED"
+  sort_order               = "DESC"
+ }
+
+# --- security list (for pfSense WAN public access to its web UI / SSH if desired) ---
+resource "oci_core_security_list" "pfsense_public_sl" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.palomo_vcn.id
+  display_name   = "pfsense-public-sl"
+
+  # Allow web GUI (HTTP/HTTPS) from your admin IP
+  ingress_security_rules {
+    protocol = "6"
+    source   = "152.58.183.96/32"   # change to your admin IP / network
+    tcp_options { min = 443; max = 443 }
+  }
+  ingress_security_rules {
+    protocol = "6"
+    source   = "152.58.183.96/32"
+    tcp_options { min = 22; max = 22 }    # optional SSH
+  }
+
+  egress_security_rules {
+    protocol    = "all"
+    destination = "0.0.0.0/0"
+  }
+}
+
+# --- create the pfSense instance (primary VNIC = WAN in public subnet) ---
+resource "oci_core_instance" "pfsense" {
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+  compartment_id      = var.compartment_ocid
+  shape               = "VM.Standard2.4"
+  display_name        = "pfsense-fw"
+
+  shape_config {
+    ocpus         = 4
+    memory_in_gbs = 60
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public_subnet.id
+    assign_public_ip = false
+    hostname_label   = "pfsense-wan"
+	private_ip       = "10.0.10.100"
+  }
+
+  # boot from the custom image we imported
+  source_details {
+    source_type = "image"
+    source_id   = "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaazi2o3fizb4vxqbotzqukqnw45ngtn4lkfim4uhhdiv36ow7cumxa"
+  }
+
+  # adjust metadata / ssh key as needed (pfSense uses its own console for admin)
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+  }
+}
+
+# --- attach a second VNIC (LAN) into firewall_subnet with a fixed private IP ---
+  resource "oci_core_vnic_attachment" "pfsense_lan_attach" {
+  compartment_id = var.compartment_ocid
+  instance_id    = oci_core_instance.pfsense.id
+
+  create_vnic_details {
+    subnet_id   = oci_core_subnet.firewall_subnet.id
+    private_ip  = "10.0.40.100"
+    hostname_label = "pfsense-lan"
+  }
+}
+
+data "oci_core_vnic_attachments" "pfsense_lan" {
+  compartment_id = var.compartment_ocid
+  instance_id    = oci_core_instance.pfsense.id
+}
+
+data "oci_core_vnic" "pfsense_lan" {
+  vnic_id = data.oci_core_vnic_attachments.pfsense_lan.vnic_attachments[0].vnic_id
 }
