@@ -576,29 +576,6 @@ data "oci_core_images" "windows_image" {
   sort_order               = "DESC"
  }
 
-# --- security list (for pfSense WAN public access to its web UI / SSH if desired) ---
-resource "oci_core_security_list" "pfsense_public_sl" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.palomo_vcn.id
-  display_name   = "pfsense-public-sl"
-
-  # Allow web GUI (HTTP/HTTPS) from your admin IP
-  ingress_security_rules {
-    protocol = "6"
-    source   = "152.58.183.96/32"   # change to your admin IP / network
-    tcp_options { min = 443; max = 443 }
-  }
-  ingress_security_rules {
-    protocol = "6"
-    source   = "152.58.183.96/32"
-    tcp_options { min = 22; max = 22 }    # optional SSH
-  }
-
-  egress_security_rules {
-    protocol    = "all"
-    destination = "0.0.0.0/0"
-  }
-}
 
 # --- create the pfSense instance (primary VNIC = WAN in public subnet) ---
 resource "oci_core_instance" "pfsense" {
