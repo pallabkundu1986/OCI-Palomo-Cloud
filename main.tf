@@ -610,12 +610,11 @@ resource "oci_core_instance" "pfsense" {
 
 # --- attach a second VNIC (LAN) into firewall_subnet with a fixed private IP ---
   resource "oci_core_vnic_attachment" "pfsense_lan_attach" {
-  compartment_id = var.compartment_ocid
-  instance_id    = oci_core_instance.pfsense.id
+  instance_id = oci_core_instance.pfsense.id
 
   create_vnic_details {
-    subnet_id   = oci_core_subnet.firewall_subnet.id
-    private_ip  = "10.0.40.100"
+    subnet_id      = oci_core_subnet.firewall_subnet.id
+    private_ip     = "10.0.40.100"
     hostname_label = "pfsense-lan"
   }
 }
