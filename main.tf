@@ -542,6 +542,14 @@ data "oci_core_vnic" "vm2_vnic" {
   }
 }
 
+data "oci_core_images" "windows_image" {
+  compartment_id           = var.compartment_ocid
+  operating_system         = "Windows"
+  operating_system_version = "Server 2019 Standard"
+  sort_by                  = "TIMECREATED"
+  sort_order               = "DESC"
+}
+
 # Create Windows VM (Public Access)
 resource "oci_core_instance" "windows_vm1" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
@@ -549,9 +557,9 @@ resource "oci_core_instance" "windows_vm1" {
   shape               = "VM.Standard.E4.Flex"
   display_name        = "Public-Windows-VM01"
 
-shape_config {
+  shape_config {
     ocpus         = 1    # Minimum for E4.Flex
-    memory_in_gbs = 16   # Minimum memory required for Windows
+    memory_in_gbs = 16   # Recommended for Windows
   }
 
   create_vnic_details {
@@ -560,15 +568,13 @@ shape_config {
     hostname_label   = "public-windows-vm01"
   }
 
-  # Reference the latest Windows image from data source
   source_details {
     source_type = "image"
     source_id   = data.oci_core_images.windows_image.images[0].id
   }
 
   metadata = {
-
-    "admin_password" = "Momo@943"
+    admin_password = "Momo@943"
   }
 }
 
