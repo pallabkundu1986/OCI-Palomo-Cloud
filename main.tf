@@ -82,7 +82,20 @@ ingress_security_rules {
     max = 3389
   }
 }
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "10.0.0.0/16"
+    tcp_options {
+      min = 1
+      max = 65535
+    }
+  }
 
+  ingress_security_rules {
+    protocol = "1"   # ICMP
+    source   = "10.0.0.0/16"
+  }
+  
   egress_security_rules {
     protocol    = "all"
     destination = "0.0.0.0/0"
