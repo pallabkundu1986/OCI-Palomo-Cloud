@@ -556,7 +556,7 @@ resource "oci_core_instance" "windows_vm1" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
   compartment_id      = var.compartment_ocid
   shape               = "VM.Standard.E4.Flex"
-  display_name        = "Public-Windows-VM01"
+  display_name        = "Windows-VM01"
 
   shape_config {
     ocpus         = 1    # Minimum for E4.Flex
@@ -566,7 +566,7 @@ resource "oci_core_instance" "windows_vm1" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public_subnet.id
     assign_public_ip = true
-    hostname_label   = "public-windows-vm01"
+    hostname_label   = "windows-vm01"
   }
 
   source_details {
